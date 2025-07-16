@@ -38,9 +38,9 @@
                 // 4. 将成功信号和用户数据存入 localStorage
                 localStorage.setItem('telegram_auth_success', JSON.stringify(user));
                 
-                // 5. 【重要】将页面重定向回主页面
-                //    请确保这里的 'index.html' 是您主页面的正确文件名
-                window.location.href = 'index.html';
+                // 5. 【重要】将页面重定向回主页面的绝对地址
+                //    请确保这里的 URL 是您主页面的真实、完整地址
+                window.location.href = 'https://songda9999.github.io/';
 
             } else {
                 throw new Error('在 URL 中未找到有效的授权数据。');
