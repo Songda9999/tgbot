@@ -201,19 +201,31 @@
       setTelegramUIState('loading'); // 可选：显示加载状态直到页面跳转
     }
 
-    // 新增：监听来自回调页面的成功信号
-    window.addEventListener('storage', (event) => {
-        // 确保是我们发送的信号
-        if (event.key === 'telegram_auth_success') {
-            const userData = JSON.parse(event.newValue);
+    // 新增：检查绑定状态的函数
+    function checkAuthStatus() {
+        const successData = localStorage.getItem('telegram_auth_success');
+        if (successData) {
+            const userData = JSON.parse(successData);
             if (userData) {
-                showToast(`成功绑定 Telegram: @${userData.username}`, 'success');
+                // 找到用户数据，更新UI
                 setTelegramUIState('bound', userData);
                 // 清理信号，防止重复触发
                 localStorage.removeItem('telegram_auth_success');
             }
         }
+    }
+
+    // 新增：监听浏览器标签页的可见性变化
+    document.addEventListener('visibilitychange', () => {
+        // 当用户从 Telegram 切回此页面时，检查绑定状态
+        if (document.visibilityState === 'visible') {
+            checkAuthStatus();
+        }
     });
+
+    // 新增：页面加载时也检查一次，以处理用户刷新页面的情况
+    window.addEventListener('load', checkAuthStatus);
+
 
     // 解除绑定的函数
     async function unlinkTelegram() {
@@ -232,6 +244,8 @@
            const errorData = await response.json().catch(() => ({ message: '服务器发生错误' }));
           throw new Error(errorData.message || '服务器发生错误');
         }
+        // 解绑成功后，也清理本地存储
+        localStorage.removeItem('telegram_auth_success');
         setTelegramUIState('unbound');
         showToast('Telegram 账户已解除关联', 'info');
       } catch (error)
