@@ -88,14 +88,14 @@
       
       <div class="space-y-6">
         <!-- 列表项通用容器 -->
-        <div class="flex flex-col md:flex-row md:items-center border-b border-gray-200 pb-6">
+        <div class="flex flex-wrap items-center justify-between border-b border-gray-200 pb-6">
           <!-- 左侧内容 -->
-          <div class="mb-4 md:mb-0">
+          <div class="mb-4 sm:mb-0">
             <p class="font-semibold text-gray-800">邮箱</p>
             <p class="text-sm text-gray-500">用于登录、提币、安全设置时使用</p>
           </div>
           <!-- 右侧内容 -->
-          <div class="md:ml-auto flex items-center space-x-4">
+          <div class="flex items-center space-x-4">
             <div class="flex items-center text-sm text-gray-800">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
               d****@gmail.com
@@ -105,12 +105,12 @@
         </div>
 
         <!-- 动态功能: Telegram 验证 -->
-        <div class="flex flex-col md:flex-row md:items-center border-b border-gray-200 pb-6">
-            <div class="mb-4 md:mb-0">
+        <div class="flex flex-wrap items-center justify-between border-b border-gray-200 pb-6">
+            <div class="mb-4 sm:mb-0">
                 <p class="font-semibold text-gray-800">Telegram 验证</p>
                 <p class="text-sm text-gray-500">用于提现操作时，进行二次安全确认</p>
             </div>
-            <div id="telegram-section" class="md:ml-auto flex items-center space-x-4">
+            <div id="telegram-section" class="flex items-center space-x-4">
                 <!-- 未绑定状态 -->
                 <div id="telegram-unbound" class="">
                     <!-- 使用自定义的“绑定”按钮 -->
@@ -132,12 +132,12 @@
         </div>
         
         <!-- 恢复的静态示例: 身份认证 -->
-        <div class="flex flex-col md:flex-row md:items-center">
-            <div class="mb-4 md:mb-0">
+        <div class="flex flex-wrap items-center justify-between">
+            <div class="mb-4 sm:mb-0">
                 <p class="font-semibold text-gray-800">身份认证</p>
                 <p class="text-sm text-gray-500">完成身份验证，享有最优的身份权益</p>
             </div>
-            <div class="md:ml-auto flex items-center space-x-4">
+            <div class="flex items-center space-x-4">
                 <div class="flex items-center text-sm text-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                     已完成 L2 认证
@@ -165,36 +165,46 @@
         setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
     }
 
-    function setTelegramUIState(state) {
+    function setTelegramUIState(state, userData = null) {
         unboundDiv.classList.add('hidden');
         boundDiv.classList.add('hidden');
         loadingState.classList.add('hidden');
-        if (state === 'unbound') unboundDiv.classList.remove('hidden');
-        else if (state === 'bound') boundDiv.classList.remove('hidden');
-        else if (state === 'loading') loadingState.classList.remove('hidden');
+
+        if (state === 'unbound') {
+            unboundDiv.classList.remove('hidden');
+        } else if (state === 'bound' && userData) {
+            const displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
+            usernameSpan.textContent = displayName;
+            boundDiv.classList.remove('hidden');
+        } else if (state === 'loading') {
+            loadingState.classList.remove('hidden');
+        }
     }
 
-    // 【重要】绑定 Telegram 的函数
+    // 绑定 Telegram 的函数
     function bindTelegram() {
-      // **开发者注意**
-      // 由于已将 Telegram 官方登录插件替换为自定义按钮，
-      // 您需要在此处实现跳转到 Telegram OAuth 页面的逻辑。
-      
-      // 1. 构建 Telegram 授权 URL
-      //    请将 YOUR_WEBSITE_ORIGIN 和 YOUR_CALLBACK_URL 替换为您的真实信息。
-      const botId = '8087175912'; // 已为您填入 Bot ID
-      const origin = encodeURIComponent('https://songda9999.github.io'); // 您的网站源
-      const returnTo = encodeURIComponent('https://songda9999.github.io/my-project/callback.html'); // 用户授权后返回的页面
+      const botId = '8087175912';
+      const origin = encodeURIComponent('https://songda9999.github.io');
+      const returnTo = encodeURIComponent('https://songda9999.github.io/my-project/callback.html');
       const authUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&return_to=${returnTo}`;
       
-      // 2. 跳转到该 URL
-      window.location.href = authUrl;
-
-      // 3. UI 提示 (可选)
-      //    在实际跳转前，可以给用户一个提示。
-      showToast('正在跳转到 Telegram 进行授权...', 'info');
-      setTelegramUIState('loading'); // 可选：显示加载状态直到页面跳转
+      window.open(authUrl, '_blank');
+      showToast('正在打开 Telegram 授权页面...', 'info');
     }
+
+    // 新增：监听来自回调页面的成功信号
+    window.addEventListener('storage', (event) => {
+        // 确保是我们发送的信号
+        if (event.key === 'telegram_auth_success') {
+            const userData = JSON.parse(event.newValue);
+            if (userData) {
+                showToast(`成功绑定 Telegram: @${userData.username}`, 'success');
+                setTelegramUIState('bound', userData);
+                // 清理信号，防止重复触发
+                localStorage.removeItem('telegram_auth_success');
+            }
+        }
+    });
 
     // 解除绑定的函数
     async function unlinkTelegram() {
