@@ -35,22 +35,14 @@
 
             // 3. 检查是否成功解析出用户数据
             if (user && user.id) {
-                // 4. 发送“绑定成功”的信号给主页面
+                // 4. 将成功信号和用户数据存入 localStorage
                 localStorage.setItem('telegram_auth_success', JSON.stringify(user));
                 
-                // 5. （可选，但推荐）在这里，您应该将 user 对象发送到您的后端服务器进行保存
-                // fetch('/api/save-telegram-user', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(user)
-                // });
-                
-                // 6. 显示成功信息并准备关闭窗口
-                messageElement.textContent = '授权成功！此窗口将自动关闭。';
-                setTimeout(() => window.close(), 1500); // 延迟关闭，让用户看到消息
+                // 5. 【重要】将页面重定向回主页面
+                //    请确保这里的 'index.html' 是您主页面的正确文件名
+                window.location.href = 'index.html';
 
             } else {
-                // 如果两种方式都无法解析出有效数据，则抛出错误
                 throw new Error('在 URL 中未找到有效的授权数据。');
             }
         } catch (error) {
