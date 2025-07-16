@@ -1,23 +1,229 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <title>绑定 Telegram</title>
-</head>
-<body>
-  <h2>绑定您的 Telegram 账号</h2>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号验证</title>
+  <!-- 引入 Tailwind CSS 以实现现代化样式 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Google Fonts 的 Inter 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* 自定义样式 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8f9fa; /* 浅灰色背景 */
+    }
+    .card {
+      background-color: #ffffff; /* 卡片背景色 */
+      border: 1px solid #e9ecef; /* 卡片边框 */
+      border-radius: 12px;
+    }
+    .btn-action {
+      border: 1px solid #ced4da;
+      color: #495057;
+      padding: 4px 16px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    .btn-action:hover {
+      background-color: #f1f3f5;
+    }
+    .status-icon {
+      width: 20px;
+      height: 20px;
+    }
+    /* 自定义 Toast 通知样式 */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-20px);
+      transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    }
+    #toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    #toast.success { background-color: #27ae60; }
+    #toast.error { background-color: #e74c3c; }
+    #toast.info { background-color: #3498db; }
 
-  <!-- Telegram 登录按钮 -->
-  <script async src="https://telegram.org/js/telegram-widget.js?22"
-    data-telegram-login="Songdacheckbalance_bot"
-    data-size="large"
-    data-onauth="onTelegramAuth(user)"
-    data-request-access="write"></script>
+    /* 加载动画 (Spinner) */
+    .spinner {
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border-left-color: #495057;
+      animation: spin 1s ease infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- Toast 通知容器 -->
+  <div id="toast"></div>
+
+  <div class="container mx-auto p-4 sm:p-8 max-w-5xl mt-8">
+    <div class="card p-6 sm:p-8">
+      <h1 class="text-2xl font-semibold text-gray-900 mb-8">账号验证</h1>
+      
+      <div class="space-y-6">
+        <!-- 静态示例: 邮箱 -->
+        <div class="flex items-start border-b border-gray-200 pb-6">
+          <div>
+            <p class="font-semibold text-gray-800">邮箱</p>
+            <p class="text-sm text-gray-500">用于登录、提币、安全设置时使用</p>
+          </div>
+          <div class="ml-auto flex items-center space-x-4">
+            <div class="flex items-center text-sm text-gray-800">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+              d****@gmail.com
+            </div>
+            <button class="btn-action">修改</button>
+          </div>
+        </div>
+
+        <!-- 动态功能: Telegram 验证 -->
+        <div class="flex items-start border-b border-gray-200 pb-6">
+            <div>
+                <p class="font-semibold text-gray-800">Telegram 验证</p>
+                <p class="text-sm text-gray-500">用于提现操作时，进行二次安全确认</p>
+            </div>
+            <div id="telegram-section" class="ml-auto flex items-center space-x-4">
+                <!-- 未绑定状态 -->
+                <div id="telegram-unbound" class="">
+                    <div id="telegram-login-container">
+                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                            data-telegram-login="Songdacheckbalance_bot"
+                            data-size="medium"
+                            data-onauth="onTelegramAuth(user)"
+                            data-request-access="write"></script>
+                    </div>
+                </div>
+                <!-- 已绑定状态 -->
+                <div id="telegram-bound" class="hidden flex items-center space-x-4">
+                    <div class="flex items-center text-sm text-gray-800">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                      <span id="telegram-username"></span>
+                    </div>
+                    <button id="unlink-button" onclick="unlinkTelegram()" class="btn-action">解除关联</button>
+                </div>
+                <!-- 加载状态 -->
+                <div id="loading-state" class="hidden">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 恢复的静态示例: 身份认证 -->
+        <div class="flex items-start">
+            <div>
+                <p class="font-semibold text-gray-800">身份认证</p>
+                <p class="text-sm text-gray-500">完成身份验证，享有最优的身份权益</p>
+            </div>
+            <div class="ml-auto flex items-center space-x-4">
+                <div class="flex items-center text-sm text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                    已完成 L2 认证
+                </div>
+                <button class="btn-action">查看</button>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <script type="text/javascript">
-    function onTelegramAuth(user) {
-      // TODO: 这里发送 user.id / user.username 到你后端接口完成绑定
-      alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
+    // 获取 DOM 元素
+    const unboundDiv = document.getElementById('telegram-unbound');
+    const boundDiv = document.getElementById('telegram-bound');
+    const loadingState = document.getElementById('loading-state');
+    const usernameSpan = document.getElementById('telegram-username');
+    const toast = document.getElementById('toast');
+
+    function showToast(message, type = 'info') {
+        toast.textContent = message;
+        toast.className = 'show';
+        toast.classList.add(type);
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
+    }
+
+    function setTelegramUIState(state) {
+        unboundDiv.classList.add('hidden');
+        boundDiv.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        if (state === 'unbound') unboundDiv.classList.remove('hidden');
+        else if (state === 'bound') boundDiv.classList.remove('hidden');
+        else if (state === 'loading') loadingState.classList.remove('hidden');
+    }
+
+    async function onTelegramAuth(user) {
+      setTelegramUIState('loading');
+      try {
+        const response = await fetch('/api/bind-telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: '无法解析服务器响应' }));
+          throw new Error(errorData.message || '服务器发生错误');
+        }
+        const displayName = user.username ? `@${user.username}` : `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
+        usernameSpan.textContent = displayName;
+        setTelegramUIState('bound');
+        showToast(`成功绑定 Telegram: ${displayName}`, 'success');
+      } catch (error) {
+        console.error('绑定失败:', error);
+        showToast(`绑定失败: ${error.message}`, 'error');
+        setTelegramUIState('unbound');
+      }
+    }
+
+    async function unlinkTelegram() {
+      const unlinkButton = document.getElementById('unlink-button');
+      const originalText = unlinkButton.textContent;
+      unlinkButton.disabled = true;
+      unlinkButton.textContent = '解绑中...';
+      try {
+        const response = await fetch('/api/unbind-telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+           const errorData = await response.json().catch(() => ({ message: '无法解析服务器响应' }));
+          throw new Error(errorData.message || '服务器发生错误');
+        }
+        setTelegramUIState('unbound');
+        showToast('Telegram 账户已解除关联', 'info');
+      } catch (error) {
+        console.error('解绑失败:', error);
+        showToast(`解绑失败: ${error.message}`, 'error');
+      } finally {
+        unlinkButton.disabled = false;
+        unlinkButton.textContent = originalText;
+      }
     }
   </script>
+
 </body>
 </html>
