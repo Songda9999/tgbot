@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Authentication</title>
+</head>
+<body>
+    <p id="message" style="font-family: sans-serif; padding: 20px; text-align: center; font-size: 16px;">正在处理授权，请稍候...</p>
+    <script>
+        const messageElement = document.getElementById('message');
+
+        try {
+            // 1. 从 URL 的 hash 中获取 Telegram 返回的数据
+            const hash = window.location.hash.substring(1);
+            if (!hash) {
+                throw new Error("URL 中缺少授权信息。此页面不能被直接访问。");
+            }
+
+            const params = new URLSearchParams(hash);
+            const tgAuthResult = params.get('tgAuthResult');
+            let user = null;
+
+            // 2. 检查是新版 OAuth 流程还是旧版 Login Widget 流程
+            if (tgAuthResult) {
+                // 新版 OAuth 流程: 数据在 tgAuthResult 参数中，是 Base64 编码的
+                const decodedJsonString = atob(tgAuthResult);
+                user = JSON.parse(decodedJsonString);
+            } else if (params.has('id') && params.has('hash')) {
+                // 旧版 Login Widget 流程: 数据直接在 hash 参数中
+                user = {};
+                for (const [key, value] of params.entries()) {
+                    user[key] = value;
+                }
+            }
+
+            // 3. 检查是否成功解析出用户数据
+            if (user && user.id) {
+                // 4. 发送“绑定成功”的信号给主页面
+                localStorage.setItem('telegram_auth_success', JSON.stringify(user));
+                
+                // 5. （可选，但推荐）在这里，您应该将 user 对象发送到您的后端服务器进行保存
+                // fetch('/api/save-telegram-user', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(user)
+                // });
+                
+                // 6. 显示成功信息并准备关闭窗口
+                messageElement.textContent = '授权成功！此窗口将自动关闭。';
+                setTimeout(() => window.close(), 1500); // 延迟关闭，让用户看到消息
+
+            } else {
+                // 如果两种方式都无法解析出有效数据，则抛出错误
+                throw new Error('在 URL 中未找到有效的授权数据。');
+            }
+        } catch (error) {
+            // 捕获任何可能发生的错误，并在页面上显示
+            console.error('Telegram 授权处理失败:', error);
+            messageElement.innerHTML = `
+                <strong style="color: red;">授权处理失败</strong><br><br>
+                原因: ${error.message}<br><br>
+                请关闭此窗口，然后返回主页面重试。
+            `;
+            localStorage.setItem('telegram_auth_fail', `处理授权时发生错误: ${error.message}`);
+        }
+    </script>
+</body>
+</html>
