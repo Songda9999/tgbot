@@ -183,25 +183,18 @@
 
     // 【重要】绑定 Telegram 的函数
     function bindTelegram() {
-      // **开发者注意**
-      // 此函数将用户重定向到 Telegram 进行授权。
-      
       // 1. 构建 Telegram 授权 URL
-      //    请将 YOUR_WEBSITE_ORIGIN 和 YOUR_CALLBACK_URL 替换为您的真实信息。
       const botId = '8087175912'; // 已为您填入 Bot ID
       const origin = encodeURIComponent('https://songda9999.github.io'); // 您的网站源
-      const returnTo = encodeURIComponent('https://songda9999.github.io/my-project/callback.html'); // 用户授权后返回的页面
+      // 【重要】请确保这里的 callback.html 与您的文件名一致
+      const returnTo = encodeURIComponent('https://songda9999.github.io/callback.html'); 
       const authUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&return_to=${returnTo}`;
       
       // 2. 在当前页面进行跳转。这是最可靠的方式。
       window.location.href = authUrl;
-
-      // 3. UI 提示 (可选)
-      showToast('正在跳转到 Telegram 进行授权...', 'info');
-      setTelegramUIState('loading'); // 可选：显示加载状态直到页面跳转
     }
 
-    // 新增：检查绑定状态的函数
+    // 检查绑定状态的函数
     function checkAuthStatus() {
         const successData = localStorage.getItem('telegram_auth_success');
         if (successData) {
@@ -209,19 +202,14 @@
             if (userData) {
                 // 找到用户数据，更新UI
                 setTelegramUIState('bound', userData);
+                // 【重要】清理信号，防止重复触发
+                localStorage.removeItem('telegram_auth_success');
+                showToast('成功绑定 Telegram！', 'success');
             }
         }
     }
 
-    // 新增：监听浏览器标签页的可见性变化
-    document.addEventListener('visibilitychange', () => {
-        // 当用户从 Telegram 切回此页面时，检查绑定状态
-        if (document.visibilityState === 'visible') {
-            checkAuthStatus();
-        }
-    });
-
-    // 新增：页面加载时也检查一次，以处理用户刷新页面的情况
+    // 页面加载时检查一次，以处理从回调页面返回的情况
     window.addEventListener('load', checkAuthStatus);
 
 
