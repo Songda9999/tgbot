@@ -209,8 +209,6 @@
             if (userData) {
                 // 找到用户数据，更新UI
                 setTelegramUIState('bound', userData);
-                // 清理信号，防止重复触发
-                localStorage.removeItem('telegram_auth_success');
             }
         }
     }
