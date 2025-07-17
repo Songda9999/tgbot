@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>账号验证</title>
+  <title>TG 二次确认</title>
   <!-- 引入 Tailwind CSS 以实现现代化样式 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Google Fonts 的 Inter 字体 -->
@@ -111,19 +111,30 @@
                 <p class="text-sm text-gray-500">用于提现操作时，进行二次安全确认</p>
             </div>
             <div id="telegram-section" class="flex items-center space-x-4">
-                <!-- 未绑定状态 -->
-                <div id="telegram-unbound" class="">
-                    <!-- 使用自定义的“绑定”按钮 -->
+                <!-- 状态 1: 未绑定 -->
+                <div id="telegram-unbound" class="hidden">
                     <button onclick="bindTelegram()" class="btn-action">绑定</button>
                 </div>
-                <!-- 已绑定状态 -->
-                <div id="telegram-bound" class="hidden flex items-center space-x-4">
+
+                <!-- 状态 2: 需要激活 -->
+                <div id="telegram-needs-activation" class="hidden flex items-center space-x-4">
                     <div class="flex items-center text-sm text-gray-800">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                      <span id="telegram-username"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.636-1.223 2.448-1.223 3.084 0l5.943 11.453c.665 1.282-.247 2.848-1.64 2.848H3.954C2.556 17.4 1.644 15.834 2.31 14.552L8.257 3.099zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                        <span id="telegram-username-pending"></span>
+                    </div>
+                    <!-- 使用 a 标签以在新窗口中打开 -->
+                    <a id="activate-button" href="#" target="_blank" onclick="completeActivation()" class="btn-action">激活通知</a>
+                </div>
+
+                <!-- 状态 3: 已激活 -->
+                <div id="telegram-activated" class="hidden flex items-center space-x-4">
+                    <div class="flex items-center text-sm text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        <span id="telegram-username-activated"></span>
                     </div>
                     <button id="unlink-button" onclick="unlinkTelegram()" class="btn-action">解除关联</button>
                 </div>
+                
                 <!-- 加载状态 -->
                 <div id="loading-state" class="hidden">
                     <div class="spinner"></div>
@@ -151,11 +162,22 @@
   </div>
 
   <script type="text/javascript">
+    // =================================================================
+    // 配置项
+    // =================================================================
+    // 【重要】请将这里替换为您的机器人用户名 (不带 @)
+    const BOT_USERNAME = "Songdacheckbalance_bot"; 
+    // =================================================================
+
     // 获取 DOM 元素
     const unboundDiv = document.getElementById('telegram-unbound');
-    const boundDiv = document.getElementById('telegram-bound');
+    const needsActivationDiv = document.getElementById('telegram-needs-activation');
+    const activatedDiv = document.getElementById('telegram-activated');
     const loadingState = document.getElementById('loading-state');
-    const usernameSpan = document.getElementById('telegram-username');
+    
+    const usernameSpanPending = document.getElementById('telegram-username-pending');
+    const usernameSpanActivated = document.getElementById('telegram-username-activated');
+    const activateButton = document.getElementById('activate-button');
     const toast = document.getElementById('toast');
 
     function showToast(message, type = 'info') {
@@ -166,18 +188,35 @@
     }
 
     function setTelegramUIState(state, userData = null) {
+        // 先隐藏所有状态
         unboundDiv.classList.add('hidden');
-        boundDiv.classList.add('hidden');
+        needsActivationDiv.classList.add('hidden');
+        activatedDiv.classList.add('hidden');
         loadingState.classList.add('hidden');
 
-        if (state === 'unbound') {
-            unboundDiv.classList.remove('hidden');
-        } else if (state === 'bound' && userData) {
-            const displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
-            usernameSpan.textContent = displayName;
-            boundDiv.classList.remove('hidden');
-        } else if (state === 'loading') {
-            loadingState.classList.remove('hidden');
+        let displayName = '';
+        if (userData) {
+            displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
+        }
+
+        switch (state) {
+            case 'unbound':
+                unboundDiv.classList.remove('hidden');
+                break;
+            case 'needs-activation':
+                usernameSpanPending.textContent = displayName;
+                // 设置激活按钮的链接
+                // 修正: 移除 BOT_USERNAME 中的 @ 符号
+                activateButton.href = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
+                needsActivationDiv.classList.remove('hidden');
+                break;
+            case 'activated':
+                usernameSpanActivated.textContent = displayName;
+                activatedDiv.classList.remove('hidden');
+                break;
+            case 'loading':
+                loadingState.classList.remove('hidden');
+                break;
         }
     }
 
@@ -185,57 +224,83 @@
     function bindTelegram() {
       // 1. 构建 Telegram 授权 URL
       const botId = '8087175912'; // 已为您填入 Bot ID
-      const origin = encodeURIComponent('https://songda9999.github.io'); // 您的网站源
+      const origin = encodeURIComponent(window.location.origin); // 自动获取当前源
+      
       // 【重要】请确保这里的 callback.html 与您的文件名一致
-      const returnTo = encodeURIComponent('https://songda9999.github.io/tgbot/callback.html'); 
+      // 【已修复】修正了构建回调 URL 的方式，以避免在 blob 环境中出错
+      const currentPath = window.location.pathname;
+      const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+      const returnToUrl = `${window.location.origin}${directoryPath}/callback.html`;
+      const returnTo = encodeURIComponent(returnToUrl);
+
       const authUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&return_to=${returnTo}&rnd=${Date.now()}`;
       
-      // 2. 在当前页面进行跳转。这是最可靠的方式。
+      // 2. 在当前页面进行跳转
       window.location.href = authUrl;
     }
 
     // 检查绑定状态的函数
     function checkAuthStatus() {
-    const successData = localStorage.getItem('telegram_auth_success');
-    if (successData) {
-        const userData = JSON.parse(successData);
-        if (userData) {
-            // 找到用户数据，更新 UI
-            setTelegramUIState('bound', userData);
-            showToast('成功绑定 Telegram！', 'success');
-        }
-    } else {
-        // 没有绑定信息，显示“绑定”按钮
-        setTelegramUIState('unbound');
-    }
-}
+        const successData = localStorage.getItem('telegram_auth_success');
+        const isActivated = localStorage.getItem('telegram_activated');
 
-    // 页面加载时检查一次，以处理从回调页面返回的情况
-    window.addEventListener('load', checkAuthStatus);
+        if (successData) {
+            const userData = JSON.parse(successData);
+            if (isActivated) {
+                // 如果已绑定且已激活，直接显示最终状态
+                setTelegramUIState('activated', userData);
+            } else {
+                // 如果已绑定但未激活，显示需要激活的状态
+                setTelegramUIState('needs-activation', userData);
+                showToast('绑定成功，请激活通知！', 'success');
+            }
+        } else {
+            // 没有绑定信息，显示“绑定”按钮
+            setTelegramUIState('unbound');
+        }
+    }
+
+    // 用户点击“激活通知”按钮后调用的函数
+    function completeActivation() {
+        // 这是一个“乐观更新”：我们假设用户在新窗口中点击了“开始”
+        // 我们在本地记录下这个状态，并更新UI
+        localStorage.setItem('telegram_activated', 'true');
+        
+        const successData = localStorage.getItem('telegram_auth_success');
+        const userData = JSON.parse(successData);
+
+        // 延迟一小段时间再更新UI，给用户一种操作完成的感觉
+        setTimeout(() => {
+            setTelegramUIState('activated', userData);
+            showToast('激活成功！', 'success');
+        }, 500);
+    }
 
 
     // 解除绑定的函数
-async function unlinkTelegram() {
-    const unlinkButton = document.getElementById('unlink-button');
-    const originalText = unlinkButton.textContent;
-    unlinkButton.disabled = true;
-    unlinkButton.textContent = '解绑中...';
+    async function unlinkTelegram() {
+        const unlinkButton = document.getElementById('unlink-button');
+        const originalText = unlinkButton.textContent;
+        unlinkButton.disabled = true;
+        unlinkButton.textContent = '解绑中...';
 
-    try {
-      // 直接清除前端数据，不请求后端
-      localStorage.removeItem('telegram_auth_success');
-      setTelegramUIState('unbound');
-      showToast('Telegram 账户已解除关联', 'info');
-    } catch (error) {
-      console.error('解绑失败:', error);
-      showToast(`解绑失败: ${error.message}`, 'error');
-    } finally {
-      unlinkButton.disabled = false;
-      unlinkButton.textContent = originalText;
+        try {
+            // 清除所有相关的本地存储数据
+            localStorage.removeItem('telegram_auth_success');
+            localStorage.removeItem('telegram_activated');
+            setTelegramUIState('unbound');
+            showToast('Telegram 账户已解除关联', 'info');
+        } catch (error) {
+            console.error('解绑失败:', error);
+            showToast(`解绑失败: ${error.message}`, 'error');
+        } finally {
+            unlinkButton.disabled = false;
+            unlinkButton.textContent = originalText;
+        }
     }
-  }
 
-  window.addEventListener('load', checkAuthStatus);
+    // 页面加载时检查一次，以处理从回调页面返回的情况
+    window.addEventListener('load', checkAuthStatus);
 
 </script>
 
