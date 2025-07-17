@@ -49,68 +49,12 @@
       opacity: 1;
       visibility: visible;
     }
-    /* 激活提示模态框样式 */
-    #activation-modal-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #activation-modal {
-      background-color: white;
-      border-radius: 16px;
-      padding: 24px;
-      width: 90%;
-      max-width: 320px;
-      text-align: center;
-    }
-    #activation-modal h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    #activation-modal p {
-      color: #6b7280;
-      margin-bottom: 24px;
-    }
-    /* 按钮样式更新为黑底白字 */
-    #activation-modal button {
-      width: 100%;
-      background-color: #1f2937; /* 深灰色/黑色 */
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    #activation-modal button:hover {
-      background-color: #374151;
-    }
   </style>
 </head>
 <body class="text-gray-900">
 
   <!-- Toast 通知容器 -->
   <div id="toast"></div>
-
-  <!-- 激活提示模态框 -->
-  <div id="activation-modal-backdrop" class="hidden">
-    <div id="activation-modal">
-      <!-- 优化了标题和提示文案 -->
-      <h3>还差一步</h3>
-      <p>为确保您能及时接收提币二次确认等重要通知，请点击下方按钮，并在 Telegram 中点击“开始”以完成激活。</p>
-      <!-- 按钮文字和功能更新 -->
-      <button onclick="triggerActivationFromModal()">立即激活</button>
-    </div>
-  </div>
 
   <div class="container mx-auto max-w-2xl">
     <!-- 顶部导航栏 -->
@@ -225,25 +169,18 @@
     const telegramSection = document.getElementById('telegram-section');
     const telegramRow = document.getElementById('telegram-row');
     const toast = document.getElementById('toast');
-    const activationModal = document.getElementById('activation-modal-backdrop');
-
-    function showActivationModal() {
-      activationModal.classList.remove('hidden');
-    }
-    function closeActivationModal() {
-      activationModal.classList.add('hidden');
-    }
 
     function showToast(message) {
         toast.textContent = message;
         toast.className = 'show';
-        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000);
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000); // 缩短显示时间
     }
 
     function setTelegramUIState(state, userData = null) {
         let statusHTML = '';
-        telegramRow.onclick = null; 
+        telegramRow.onclick = null; // 清除之前的点击事件
 
+        // 【已修复】在 switch 外部先计算好 displayName
         let displayName = '';
         if (userData) {
             displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
@@ -262,27 +199,25 @@
                     <span class="text-yellow-500">待激活</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                telegramRow.onclick = triggerActivationFromModal;
+                telegramRow.onclick = () => {
+                    const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
+                    window.open(activationUrl, '_blank');
+                    completeActivation();
+                };
                 break;
             case 'activated':
+                // 【已修复】在“已开启”状态下显示用户的 Telegram 用户名
                 statusHTML = `
                     <span class="text-gray-500">${displayName}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                telegramRow.onclick = unlinkTelegram; 
+                telegramRow.onclick = unlinkTelegram; // 点击整行可以解绑
                 break;
             case 'loading':
                 statusHTML = `<div class="spinner"></div>`;
                 break;
         }
         telegramSection.innerHTML = statusHTML;
-    }
-
-    function triggerActivationFromModal() {
-      const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
-      window.open(activationUrl, '_blank');
-      closeActivationModal();
-      completeActivation();
     }
 
     function bindTelegram() {
@@ -298,42 +233,20 @@
       window.location.href = authUrl;
     }
 
-    // 【已修复】重构了整个状态检查逻辑，使其更健壮
     function checkAuthStatus() {
-        // 检查 URL 中是否有特定参数，这比 sessionStorage 更可靠
-        const urlParams = new URLSearchParams(window.location.search);
-        const justReturned = urlParams.get('tg_bound') === 'success';
+        const successData = localStorage.getItem('telegram_auth_success');
+        const isActivated = localStorage.getItem('telegram_activated');
 
-        if (justReturned) {
-            // 场景1: 刚刚从 callback.html 成功返回
-            const successData = localStorage.getItem('telegram_auth_success');
-
-            if (successData) {
-                // 授权成功！
-                const userData = JSON.parse(successData);
+        if (successData) {
+            const userData = JSON.parse(successData);
+            if (isActivated) {
+                setTelegramUIState('activated', userData);
+            } else {
                 setTelegramUIState('needs-activation', userData);
-                showActivationModal(); // **只在这里**弹出模态框
-            } else {
-                // 数据丢失，这不应该发生，但作为保险
-                setTelegramUIState('unbound');
-                showToast('发生未知错误');
+                showToast('绑定成功，请点击激活');
             }
-            // 清理 URL，避免刷新页面时重复触发
-            window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            // 场景2: 正常加载页面（非授权返回）
-            const successData = localStorage.getItem('telegram_auth_success');
-            if (successData) {
-                const userData = JSON.parse(successData);
-                const isActivated = localStorage.getItem('telegram_activated');
-                if (isActivated) {
-                    setTelegramUIState('activated', userData);
-                } else {
-                    setTelegramUIState('needs-activation', userData);
-                }
-            } else {
-                setTelegramUIState('unbound');
-            }
+            setTelegramUIState('unbound');
         }
     }
 
@@ -348,6 +261,7 @@
     }
 
     function unlinkTelegram() {
+        // 使用原生 confirm 对话框进行确认
         if (confirm('您确定要解除与 Telegram 账户的关联吗？')) {
             localStorage.removeItem('telegram_auth_success');
             localStorage.removeItem('telegram_activated');
@@ -356,6 +270,7 @@
         }
     }
 
+    // 当页面从后台切换回前台时，自动刷新状态
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             checkAuthStatus();
