@@ -35,26 +35,43 @@
 
             // 3. 检查是否成功解析出用户数据
             if (user && user.id) {
+                 const uid = localStorage.getItem('current_uid');
                 // 4. 将成功信号和用户数据存入 localStorage
                 localStorage.setItem('telegram_auth_success', JSON.stringify(user));
-                
-                // 5. 【重要】将页面重定向回主页面的绝对地址
-                //    请确保这里的 URL 是您主页面的真实、完整地址
-                window.location.href = 'https://songda9999.github.io/tgbot/';
 
-            } else {
-                throw new Error('在 URL 中未找到有效的授权数据。');
-            }
-        } catch (error) {
-            // 捕获任何可能发生的错误，并在页面上显示
-            console.error('Telegram 授权处理失败:', error);
-            messageElement.innerHTML = `
-                <strong style="color: red;">授权处理失败</strong><br><br>
-                原因: ${error.message}<br><br>
-                请关闭此窗口，然后返回主页面重试。
-            `;
-            localStorage.setItem('telegram_auth_fail', `处理授权时发生错误: ${error.message}`);
-        }
-    </script>
+                fetch('https://api.example.com/bind-telegram', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    uid: uid,
+    telegram_id: user.id,
+            username: user.username,
+            first_name: user.first_name,
+            last_name: user.last_name || '',
+            lang: user.lang || '',
+            auth_date: user.auth_date,
+            hash: user.hash
+          })
+        }).catch(err => {
+          console.error('发送后端绑定失败:', err);
+        });
+
+        // 存入本地，回首页
+        localStorage.setItem('telegram_auth_success', JSON.stringify(user));
+        window.location.href = 'https://songda9999.github.io/tgbot/';
+      } else {
+        throw new Error("未找到授权用户信息");
+      }
+
+    } catch (error) {
+      console.error('Telegram 授权处理失败:', error);
+      messageElement.innerHTML = `
+        <strong style="color: red;">授权处理失败</strong><br><br>
+        原因: ${error.message}<br><br>
+        请关闭此窗口，然后返回主页面重试。
+      `;
+      localStorage.setItem('telegram_auth_fail', `处理授权时发生错误: ${error.message}`);
+    }
+  </script>
 </body>
 </html>
