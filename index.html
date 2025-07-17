@@ -79,7 +79,7 @@
       color: #6b7280;
       margin-bottom: 24px;
     }
-    /* 【已修改】按钮样式更新为黑底白字 */
+    /* 按钮样式更新为黑底白字 */
     #activation-modal button {
       width: 100%;
       background-color: #1f2937; /* 深灰色/黑色 */
@@ -104,10 +104,10 @@
   <!-- 激活提示模态框 -->
   <div id="activation-modal-backdrop" class="hidden">
     <div id="activation-modal">
-      <!-- 【已修改】优化了标题和提示文案 -->
-      <h3>立即激活</h3>
-      <p>为确保您能及时接收提币二次确认通知，请点击下方按钮，并在 Telegram 中点击“开始”或“/Start”完成激活。</p>
-      <!-- 【已修改】按钮文字和功能更新 -->
+      <!-- 优化了标题和提示文案 -->
+      <h3>还差一步</h3>
+      <p>为确保您能及时接收提币二次确认等重要通知，请点击下方按钮，并在 Telegram 中点击“开始”以完成激活。</p>
+      <!-- 按钮文字和功能更新 -->
       <button onclick="triggerActivationFromModal()">立即激活</button>
     </div>
   </div>
@@ -262,7 +262,6 @@
                     <span class="text-yellow-500">待激活</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                // 【已修改】如果用户关闭了弹窗，点击列表项也能触发激活
                 telegramRow.onclick = triggerActivationFromModal;
                 break;
             case 'activated':
@@ -279,16 +278,10 @@
         telegramSection.innerHTML = statusHTML;
     }
 
-    // 【新增】一个统一的函数来处理激活流程
     function triggerActivationFromModal() {
-      // 1. 打开 Telegram 激活链接
       const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
       window.open(activationUrl, '_blank');
-      
-      // 2. 关闭模态框（如果它是打开的）
       closeActivationModal();
-      
-      // 3. 乐观更新UI
       completeActivation();
     }
 
@@ -305,25 +298,42 @@
       window.location.href = authUrl;
     }
 
+    // 【已修复】重构了整个状态检查逻辑，使其更健壮
     function checkAuthStatus() {
-        const successData = localStorage.getItem('telegram_auth_success');
-        const isActivated = localStorage.getItem('telegram_activated');
+        // 检查 URL 中是否有特定参数，这比 sessionStorage 更可靠
+        const urlParams = new URLSearchParams(window.location.search);
+        const justReturned = urlParams.get('tg_bound') === 'success';
 
-        if (successData) {
-            const userData = JSON.parse(successData);
-            if (isActivated) {
-                setTelegramUIState('activated', userData);
-            } else {
+        if (justReturned) {
+            // 场景1: 刚刚从 callback.html 成功返回
+            const successData = localStorage.getItem('telegram_auth_success');
+
+            if (successData) {
+                // 授权成功！
+                const userData = JSON.parse(successData);
                 setTelegramUIState('needs-activation', userData);
-                
-                const hasSeenPrompt = sessionStorage.getItem('has_seen_activation_prompt');
-                if (!hasSeenPrompt) {
-                    showActivationModal(); 
-                    sessionStorage.setItem('has_seen_activation_prompt', 'true');
-                }
+                showActivationModal(); // **只在这里**弹出模态框
+            } else {
+                // 数据丢失，这不应该发生，但作为保险
+                setTelegramUIState('unbound');
+                showToast('发生未知错误');
             }
+            // 清理 URL，避免刷新页面时重复触发
+            window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            setTelegramUIState('unbound');
+            // 场景2: 正常加载页面（非授权返回）
+            const successData = localStorage.getItem('telegram_auth_success');
+            if (successData) {
+                const userData = JSON.parse(successData);
+                const isActivated = localStorage.getItem('telegram_activated');
+                if (isActivated) {
+                    setTelegramUIState('activated', userData);
+                } else {
+                    setTelegramUIState('needs-activation', userData);
+                }
+            } else {
+                setTelegramUIState('unbound');
+            }
         }
     }
 
@@ -341,7 +351,6 @@
         if (confirm('您确定要解除与 Telegram 账户的关联吗？')) {
             localStorage.removeItem('telegram_auth_success');
             localStorage.removeItem('telegram_activated');
-            sessionStorage.removeItem('has_seen_activation_prompt'); 
             setTelegramUIState('unbound');
             showToast('已解除关联');
         }
