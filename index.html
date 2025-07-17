@@ -49,12 +49,68 @@
       opacity: 1;
       visibility: visible;
     }
+    /* 激活提示模态框样式 */
+    #activation-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #activation-modal {
+      background-color: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 320px;
+      text-align: center;
+    }
+    #activation-modal h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    #activation-modal p {
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+    /* 【已修改】按钮样式更新为黑底白字 */
+    #activation-modal button {
+      width: 100%;
+      background-color: #1f2937; /* 深灰色/黑色 */
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #activation-modal button:hover {
+      background-color: #374151;
+    }
   </style>
 </head>
 <body class="text-gray-900">
 
   <!-- Toast 通知容器 -->
   <div id="toast"></div>
+
+  <!-- 激活提示模态框 -->
+  <div id="activation-modal-backdrop" class="hidden">
+    <div id="activation-modal">
+      <!-- 【已修改】优化了标题和提示文案 -->
+      <h3>立即激活</h3>
+      <p>为确保您能及时接收提币二次确认通知，请点击下方按钮，并在 Telegram 中点击“开始”或“/Start”完成激活。</p>
+      <!-- 【已修改】按钮文字和功能更新 -->
+      <button onclick="triggerActivationFromModal()">立即激活</button>
+    </div>
+  </div>
 
   <div class="container mx-auto max-w-2xl">
     <!-- 顶部导航栏 -->
@@ -169,16 +225,29 @@
     const telegramSection = document.getElementById('telegram-section');
     const telegramRow = document.getElementById('telegram-row');
     const toast = document.getElementById('toast');
+    const activationModal = document.getElementById('activation-modal-backdrop');
+
+    function showActivationModal() {
+      activationModal.classList.remove('hidden');
+    }
+    function closeActivationModal() {
+      activationModal.classList.add('hidden');
+    }
 
     function showToast(message) {
         toast.textContent = message;
         toast.className = 'show';
-        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000); // 缩短显示时间
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000);
     }
 
     function setTelegramUIState(state, userData = null) {
         let statusHTML = '';
-        telegramRow.onclick = null; // 清除之前的点击事件
+        telegramRow.onclick = null; 
+
+        let displayName = '';
+        if (userData) {
+            displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
+        }
 
         switch (state) {
             case 'unbound':
@@ -193,25 +262,34 @@
                     <span class="text-yellow-500">待激活</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                // 使用 a 标签的思路，但是通过 JS 控制跳转
-                telegramRow.onclick = () => {
-                    const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
-                    window.open(activationUrl, '_blank');
-                    completeActivation();
-                };
+                // 【已修改】如果用户关闭了弹窗，点击列表项也能触发激活
+                telegramRow.onclick = triggerActivationFromModal;
                 break;
             case 'activated':
                 statusHTML = `
-                    <span class="text-green-500">已开启</span>
+                    <span class="text-gray-500">${displayName}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                telegramRow.onclick = unlinkTelegram; // 点击整行可以解绑
+                telegramRow.onclick = unlinkTelegram; 
                 break;
             case 'loading':
                 statusHTML = `<div class="spinner"></div>`;
                 break;
         }
         telegramSection.innerHTML = statusHTML;
+    }
+
+    // 【新增】一个统一的函数来处理激活流程
+    function triggerActivationFromModal() {
+      // 1. 打开 Telegram 激活链接
+      const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
+      window.open(activationUrl, '_blank');
+      
+      // 2. 关闭模态框（如果它是打开的）
+      closeActivationModal();
+      
+      // 3. 乐观更新UI
+      completeActivation();
     }
 
     function bindTelegram() {
@@ -237,7 +315,12 @@
                 setTelegramUIState('activated', userData);
             } else {
                 setTelegramUIState('needs-activation', userData);
-                showToast('绑定成功，请点击激活');
+                
+                const hasSeenPrompt = sessionStorage.getItem('has_seen_activation_prompt');
+                if (!hasSeenPrompt) {
+                    showActivationModal(); 
+                    sessionStorage.setItem('has_seen_activation_prompt', 'true');
+                }
             }
         } else {
             setTelegramUIState('unbound');
@@ -255,14 +338,20 @@
     }
 
     function unlinkTelegram() {
-        // 使用原生 confirm 对话框进行确认
         if (confirm('您确定要解除与 Telegram 账户的关联吗？')) {
             localStorage.removeItem('telegram_auth_success');
             localStorage.removeItem('telegram_activated');
+            sessionStorage.removeItem('has_seen_activation_prompt'); 
             setTelegramUIState('unbound');
             showToast('已解除关联');
         }
     }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkAuthStatus();
+        }
+    });
 
     window.addEventListener('load', checkAuthStatus);
   </script>
