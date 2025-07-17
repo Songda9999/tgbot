@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TG 二次确认</title>
+  <title>安全中心</title>
   <!-- 引入 Tailwind CSS 以实现现代化样式 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Google Fonts 的 Inter 字体 -->
@@ -14,54 +14,8 @@
     /* 自定义样式 */
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa; /* 浅灰色背景 */
+      background-color: #f7f8fa; /* 匹配截图中的浅灰色背景 */
     }
-    .card {
-      background-color: #ffffff; /* 卡片背景色 */
-      border: 1px solid #e9ecef; /* 卡片边框 */
-      border-radius: 12px;
-    }
-    .btn-action {
-      border: 1px solid #ced4da;
-      color: #495057;
-      padding: 4px 16px;
-      border-radius: 9999px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background-color 0.2s, border-color 0.2s;
-      white-space: nowrap; /* 防止按钮文字换行 */
-    }
-    .btn-action:hover {
-      background-color: #f1f3f5;
-    }
-    .status-icon {
-      width: 20px;
-      height: 20px;
-    }
-    /* 自定义 Toast 通知样式 */
-    #toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-20px);
-      transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
-    }
-    #toast.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-    #toast.success { background-color: #27ae60; }
-    #toast.error { background-color: #e74c3c; }
-    #toast.info { background-color: #3498db; }
-
     /* 加载动画 (Spinner) */
     .spinner {
       border: 2px solid rgba(0, 0, 0, 0.1);
@@ -75,171 +29,204 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+     /* 自定义 Toast 通知样式 */
+     #toast {
+      position: fixed;
+      bottom: 60px; /* 调整位置到中下方 */
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 9999px; /* 圆角胶囊形状 */
+      color: white;
+      background-color: rgba(0, 0, 0, 0.75);
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    }
+    #toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
   </style>
 </head>
-<body class="text-gray-800">
+<body class="text-gray-900">
 
   <!-- Toast 通知容器 -->
   <div id="toast"></div>
 
-  <div class="container mx-auto p-4 sm:p-8 max-w-5xl mt-8">
-    <div class="card p-6 sm:p-8">
-      <h1 class="text-2xl font-semibold text-gray-900 mb-8">账号验证</h1>
-      
-      <div class="space-y-6">
-        <!-- 列表项通用容器 -->
-        <div class="flex flex-wrap items-center justify-between border-b border-gray-200 pb-6">
-          <!-- 左侧内容 -->
-          <div class="mb-4 sm:mb-0">
-            <p class="font-semibold text-gray-800">邮箱</p>
-            <p class="text-sm text-gray-500">用于登录、提币、安全设置时使用</p>
+  <div class="container mx-auto max-w-2xl">
+    <!-- 顶部导航栏 -->
+    <header class="flex items-center justify-between p-4 bg-white">
+      <button class="p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h1 class="text-lg font-semibold">安全中心</h1>
+      <div class="w-8"></div> <!-- 用于占位，使标题居中 -->
+    </header>
+
+    <main class="p-4 space-y-6">
+      <!-- 账号验证 Section -->
+      <div>
+        <h2 class="text-sm text-gray-500 mb-2 px-2">账号验证</h2>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+          <!-- 手机 -->
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>手机</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>已开启</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
           </div>
-          <!-- 右侧内容 -->
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center text-sm text-gray-800">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-              d****@gmail.com
+          <!-- 邮箱 -->
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>邮箱</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>修改</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </div>
-            <button class="btn-action">修改</button>
+          </div>
+          <!-- Telegram 验证 (动态) -->
+          <div id="telegram-row" class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>Telegram 验证</span>
+            <div id="telegram-section" class="flex items-center space-x-2 text-gray-500">
+              <!-- 状态会由 JS 动态填充 -->
+            </div>
+          </div>
+          <!-- 谷歌验证 -->
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>谷歌验证</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>已开启</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+          <!-- 通行密钥 -->
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>通行密钥</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>已开启</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
           </div>
         </div>
-
-        <!-- 动态功能: Telegram 验证 -->
-        <div class="flex flex-wrap items-center justify-between border-b border-gray-200 pb-6">
-            <div class="mb-4 sm:mb-0">
-                <p class="font-semibold text-gray-800">Telegram 验证</p>
-                <p class="text-sm text-gray-500">用于提现操作时，进行二次安全确认</p>
-            </div>
-            <div id="telegram-section" class="flex items-center space-x-4">
-                <!-- 状态 1: 未绑定 -->
-                <div id="telegram-unbound" class="hidden">
-                    <button onclick="bindTelegram()" class="btn-action">绑定</button>
-                </div>
-
-                <!-- 状态 2: 需要激活 -->
-                <div id="telegram-needs-activation" class="hidden flex items-center space-x-4">
-                    <div class="flex items-center text-sm text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.636-1.223 2.448-1.223 3.084 0l5.943 11.453c.665 1.282-.247 2.848-1.64 2.848H3.954C2.556 17.4 1.644 15.834 2.31 14.552L8.257 3.099zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
-                        <span id="telegram-username-pending"></span>
-                    </div>
-                    <!-- 使用 a 标签以在新窗口中打开 -->
-                    <a id="activate-button" href="#" target="_blank" onclick="completeActivation()" class="btn-action">激活通知</a>
-                </div>
-
-                <!-- 状态 3: 已激活 -->
-                <div id="telegram-activated" class="hidden flex items-center space-x-4">
-                    <div class="flex items-center text-sm text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                        <span id="telegram-username-activated"></span>
-                    </div>
-                    <button id="unlink-button" onclick="unlinkTelegram()" class="btn-action">解除关联</button>
-                </div>
-                
-                <!-- 加载状态 -->
-                <div id="loading-state" class="hidden">
-                    <div class="spinner"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 恢复的静态示例: 身份认证 -->
-        <div class="flex flex-wrap items-center justify-between">
-            <div class="mb-4 sm:mb-0">
-                <p class="font-semibold text-gray-800">身份认证</p>
-                <p class="text-sm text-gray-500">完成身份验证，享有最优的身份权益</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center text-sm text-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                    已完成 L2 认证
-                </div>
-                <button class="btn-action">查看</button>
-            </div>
-        </div>
-
       </div>
-    </div>
+
+      <!-- 密码 Section -->
+      <div>
+        <h2 class="text-sm text-gray-500 mb-2 px-2">密码</h2>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>登录密码</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>重置</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>资金密码</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <span>修改</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 高级设置 Section -->
+      <div>
+        <h2 class="text-sm text-gray-500 mb-2 px-2">高级设置</h2>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>App 锁定</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+            <span>删除账号</span>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </main>
   </div>
 
   <script type="text/javascript">
     // =================================================================
     // 配置项
     // =================================================================
-    // 【重要】请将这里替换为您的机器人用户名 (不带 @)
     const BOT_USERNAME = "Songdacheckbalance_bot"; 
     // =================================================================
 
     // 获取 DOM 元素
-    const unboundDiv = document.getElementById('telegram-unbound');
-    const needsActivationDiv = document.getElementById('telegram-needs-activation');
-    const activatedDiv = document.getElementById('telegram-activated');
-    const loadingState = document.getElementById('loading-state');
-    
-    const usernameSpanPending = document.getElementById('telegram-username-pending');
-    const usernameSpanActivated = document.getElementById('telegram-username-activated');
-    const activateButton = document.getElementById('activate-button');
+    const telegramSection = document.getElementById('telegram-section');
+    const telegramRow = document.getElementById('telegram-row');
     const toast = document.getElementById('toast');
 
-    function showToast(message, type = 'info') {
+    function showToast(message) {
         toast.textContent = message;
         toast.className = 'show';
-        toast.classList.add(type);
-        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000); // 缩短显示时间
     }
 
     function setTelegramUIState(state, userData = null) {
-        // 先隐藏所有状态
-        unboundDiv.classList.add('hidden');
-        needsActivationDiv.classList.add('hidden');
-        activatedDiv.classList.add('hidden');
-        loadingState.classList.add('hidden');
-
-        let displayName = '';
-        if (userData) {
-            displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
-        }
+        let statusHTML = '';
+        telegramRow.onclick = null; // 清除之前的点击事件
 
         switch (state) {
             case 'unbound':
-                unboundDiv.classList.remove('hidden');
+                statusHTML = `
+                    <span class="text-red-500">未绑定</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                `;
+                telegramRow.onclick = bindTelegram;
                 break;
             case 'needs-activation':
-                usernameSpanPending.textContent = displayName;
-                // 设置激活按钮的链接
-                // 修正: 移除 BOT_USERNAME 中的 @ 符号
-                activateButton.href = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
-                needsActivationDiv.classList.remove('hidden');
+                statusHTML = `
+                    <span class="text-yellow-500">待激活</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                `;
+                // 使用 a 标签的思路，但是通过 JS 控制跳转
+                telegramRow.onclick = () => {
+                    const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
+                    window.open(activationUrl, '_blank');
+                    completeActivation();
+                };
                 break;
             case 'activated':
-                usernameSpanActivated.textContent = displayName;
-                activatedDiv.classList.remove('hidden');
+                statusHTML = `
+                    <span class="text-green-500">已开启</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                `;
+                telegramRow.onclick = unlinkTelegram; // 点击整行可以解绑
                 break;
             case 'loading':
-                loadingState.classList.remove('hidden');
+                statusHTML = `<div class="spinner"></div>`;
                 break;
         }
+        telegramSection.innerHTML = statusHTML;
     }
 
-    // 【重要】绑定 Telegram 的函数
     function bindTelegram() {
-      // 1. 构建 Telegram 授权 URL
-      const botId = '8087175912'; // 已为您填入 Bot ID
-      const origin = encodeURIComponent(window.location.origin); // 自动获取当前源
+      const botId = '8087175912';
+      const origin = encodeURIComponent(window.location.origin);
       
-      // 【重要】请确保这里的 callback.html 与您的文件名一致
-      // 【已修复】修正了构建回调 URL 的方式，以避免在 blob 环境中出错
       const currentPath = window.location.pathname;
       const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
       const returnToUrl = `${window.location.origin}${directoryPath}/callback.html`;
       const returnTo = encodeURIComponent(returnToUrl);
 
       const authUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${origin}&return_to=${returnTo}&rnd=${Date.now()}`;
-      
-      // 2. 在当前页面进行跳转
       window.location.href = authUrl;
     }
 
-    // 检查绑定状态的函数
     function checkAuthStatus() {
         const successData = localStorage.getItem('telegram_auth_success');
         const isActivated = localStorage.getItem('telegram_activated');
@@ -247,62 +234,38 @@
         if (successData) {
             const userData = JSON.parse(successData);
             if (isActivated) {
-                // 如果已绑定且已激活，直接显示最终状态
                 setTelegramUIState('activated', userData);
             } else {
-                // 如果已绑定但未激活，显示需要激活的状态
                 setTelegramUIState('needs-activation', userData);
-                showToast('绑定成功，请激活通知！', 'success');
+                showToast('绑定成功，请点击激活');
             }
         } else {
-            // 没有绑定信息，显示“绑定”按钮
             setTelegramUIState('unbound');
         }
     }
 
-    // 用户点击“激活通知”按钮后调用的函数
     function completeActivation() {
-        // 这是一个“乐观更新”：我们假设用户在新窗口中点击了“开始”
-        // 我们在本地记录下这个状态，并更新UI
         localStorage.setItem('telegram_activated', 'true');
-        
         const successData = localStorage.getItem('telegram_auth_success');
         const userData = JSON.parse(successData);
-
-        // 延迟一小段时间再更新UI，给用户一种操作完成的感觉
         setTimeout(() => {
             setTelegramUIState('activated', userData);
-            showToast('激活成功！', 'success');
+            showToast('激活成功！');
         }, 500);
     }
 
-
-    // 解除绑定的函数
-    async function unlinkTelegram() {
-        const unlinkButton = document.getElementById('unlink-button');
-        const originalText = unlinkButton.textContent;
-        unlinkButton.disabled = true;
-        unlinkButton.textContent = '解绑中...';
-
-        try {
-            // 清除所有相关的本地存储数据
+    function unlinkTelegram() {
+        // 使用原生 confirm 对话框进行确认
+        if (confirm('您确定要解除与 Telegram 账户的关联吗？')) {
             localStorage.removeItem('telegram_auth_success');
             localStorage.removeItem('telegram_activated');
             setTelegramUIState('unbound');
-            showToast('Telegram 账户已解除关联', 'info');
-        } catch (error) {
-            console.error('解绑失败:', error);
-            showToast(`解绑失败: ${error.message}`, 'error');
-        } finally {
-            unlinkButton.disabled = false;
-            unlinkButton.textContent = originalText;
+            showToast('已解除关联');
         }
     }
 
-    // 页面加载时检查一次，以处理从回调页面返回的情况
     window.addEventListener('load', checkAuthStatus);
-
-</script>
+  </script>
 
 </body>
 </html>
