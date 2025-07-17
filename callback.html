@@ -10,7 +10,6 @@
         const messageElement = document.getElementById('message');
 
         try {
-            // 1. 从 URL 的 hash 中获取 Telegram 返回的数据
             const hash = window.location.hash.substring(1);
             if (!hash) {
                 throw new Error("URL 中缺少授权信息。此页面不能被直接访问。");
@@ -20,58 +19,41 @@
             const tgAuthResult = params.get('tgAuthResult');
             let user = null;
 
-            // 2. 检查是新版 OAuth 流程还是旧版 Login Widget 流程
             if (tgAuthResult) {
-                // 新版 OAuth 流程: 数据在 tgAuthResult 参数中，是 Base64 编码的
                 const decodedJsonString = atob(tgAuthResult);
                 user = JSON.parse(decodedJsonString);
             } else if (params.has('id') && params.has('hash')) {
-                // 旧版 Login Widget 流程: 数据直接在 hash 参数中
                 user = {};
                 for (const [key, value] of params.entries()) {
                     user[key] = value;
                 }
             }
 
-            // 3. 检查是否成功解析出用户数据
             if (user && user.id) {
-                 const uid = localStorage.getItem('current_uid');
-                // 4. 将成功信号和用户数据存入 localStorage
+                // 1. 将成功信号和用户数据存入 localStorage
                 localStorage.setItem('telegram_auth_success', JSON.stringify(user));
+                
+                // 2. 【已修改】准备带成功标记的新 URL
+                // 注意：这里我们假设主页是 index.html
+                const mainPageUrl = new URL('index.html', window.location.href);
+                mainPageUrl.searchParams.set('tg_bound', 'success'); // 添加成功标记
 
-                fetch('https://api.example.com/bind-telegram', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    uid: uid,
-    telegram_id: user.id,
-            username: user.username,
-            first_name: user.first_name,
-            last_name: user.last_name || '',
-            lang: user.lang || '',
-            auth_date: user.auth_date,
-            hash: user.hash
-          })
-        }).catch(err => {
-          console.error('发送后端绑定失败:', err);
-        });
+                // 3. 跳转回带标记的主页
+                window.location.href = mainPageUrl.href;
+            } else {
+                throw new Error("未找到授权用户信息");
+            }
 
-        // 存入本地，回首页
-        localStorage.setItem('telegram_auth_success', JSON.stringify(user));
-        window.location.href = 'https://songda9999.github.io/tgbot/';
-      } else {
-        throw new Error("未找到授权用户信息");
-      }
-
-    } catch (error) {
-      console.error('Telegram 授权处理失败:', error);
-      messageElement.innerHTML = `
-        <strong style="color: red;">授权处理失败</strong><br><br>
-        原因: ${error.message}<br><br>
-        请关闭此窗口，然后返回主页面重试。
-      `;
-      localStorage.setItem('telegram_auth_fail', `处理授权时发生错误: ${error.message}`);
-    }
-  </script>
+        } catch (error) {
+            console.error('Telegram 授权处理失败:', error);
+            messageElement.innerHTML = `
+              <strong style="color: red;">授权处理失败</strong><br><br>
+              原因: ${error.message}<br><br>
+              请关闭此窗口，然后返回主页面重试。
+            `;
+            // 如果失败，直接跳回不带标记的主页
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>
