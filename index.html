@@ -215,36 +215,29 @@
 
 
     // 解除绑定的函数
-    async function unlinkTelegram() {
-      const unlinkButton = document.getElementById('unlink-button');
-      const originalText = unlinkButton.textContent;
-      unlinkButton.disabled = true;
-      unlinkButton.textContent = '解绑中...';
-      try {
-        // 实际开发中，这里应调用您的后端接口
-        const response = await fetch('/api/unbind-telegram', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
+async function unlinkTelegram() {
+    const unlinkButton = document.getElementById('unlink-button');
+    const originalText = unlinkButton.textContent;
+    unlinkButton.disabled = true;
+    unlinkButton.textContent = '解绑中...';
 
-        if (!response.ok) {
-           const errorData = await response.json().catch(() => ({ message: '服务器发生错误' }));
-          throw new Error(errorData.message || '服务器发生错误');
-        }
-        // 解绑成功后，也清理本地存储
-        localStorage.removeItem('telegram_auth_success');
-        setTelegramUIState('unbound');
-        showToast('Telegram 账户已解除关联', 'info');
-      } catch (error)
-      {
-        console.error('解绑失败:', error);
-        showToast(`解绑失败: ${error.message}`, 'error');
-      } finally {
-        unlinkButton.disabled = false;
-        unlinkButton.textContent = originalText;
-      }
+    try {
+      // 直接清除前端数据，不请求后端
+      localStorage.removeItem('telegram_auth_success');
+      setTelegramUIState('unbound');
+      showToast('Telegram 账户已解除关联', 'info');
+    } catch (error) {
+      console.error('解绑失败:', error);
+      showToast(`解绑失败: ${error.message}`, 'error');
+    } finally {
+      unlinkButton.disabled = false;
+      unlinkButton.textContent = originalText;
     }
-  </script>
+  }
+
+  window.addEventListener('load', checkAuthStatus);
+
+</script>
 
 </body>
 </html>
