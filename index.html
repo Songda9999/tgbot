@@ -196,18 +196,19 @@
 
     // 检查绑定状态的函数
     function checkAuthStatus() {
-        const successData = localStorage.getItem('telegram_auth_success');
-        if (successData) {
-            const userData = JSON.parse(successData);
-            if (userData) {
-                // 找到用户数据，更新UI
-                setTelegramUIState('bound', userData);
-                // 【重要】清理信号，防止重复触发
-                localStorage.removeItem('telegram_auth_success');
-                showToast('成功绑定 Telegram！', 'success');
-            }
+    const successData = localStorage.getItem('telegram_auth_success');
+    if (successData) {
+        const userData = JSON.parse(successData);
+        if (userData) {
+            // 找到用户数据，更新 UI
+            setTelegramUIState('bound', userData);
+            showToast('成功绑定 Telegram！', 'success');
         }
+    } else {
+        // 没有绑定信息，显示“绑定”按钮
+        setTelegramUIState('unbound');
     }
+}
 
     // 页面加载时检查一次，以处理从回调页面返回的情况
     window.addEventListener('load', checkAuthStatus);
